@@ -32,11 +32,6 @@ class Query
     protected $postType;
 
     /**
-     * @var int Number of posts per page.
-     */
-    protected $postsPerPage;
-
-    /**
      * Query constructor.
      *
      * @param string     $type
