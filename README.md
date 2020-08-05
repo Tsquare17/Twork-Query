@@ -2,6 +2,10 @@
 
 ## A WordPress WP_Query wrapper.
 
+### Installation
+
+- composer require twork/query
+
 ### Example Usage:
 
 ```php

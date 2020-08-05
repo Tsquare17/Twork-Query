@@ -48,11 +48,11 @@ class Query
 
         $this->args = $args ?: [];
 
-        $this->originalArgs = $this->args;
-
-        if (!array_key_exists('post_type', $args)) {
+        if (!array_key_exists('post_type', $this->args)) {
             $this->addArg('post_type', $this->postType);
         }
+
+        $this->originalArgs = $this->args;
     }
 
     /**
