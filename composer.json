@@ -1,0 +1,28 @@
+{
+  "name": "twork/query",
+  "version": "1.0.0",
+  "description": "A WP_Query wrapper.",
+  "keywords": ["PHP", "WP", "WordPress", "WP_Query", "Query"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Trevor Thompson",
+      "email": "trevor@trevomail.com"
+    }
+  ],
+  "require": {
+    "php": "^7.1"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "squizlabs/php_codesniffer": "^3.5"
+  },
+  "scripts": {
+    "sniff": "phpcs -p -s --colors --standard=phpcs.xml"
+  },
+  "autoload": {
+    "psr-4": {
+      "Twork\\Query\\": "src/"
+    }
+  }
+}
