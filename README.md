@@ -36,6 +36,6 @@ Arguments that aren't available as methods can be added using addArg, shown in t
 
 $query = new Query('custom-post');
 
-$query->addArg('author', 'Jim');
+$query->addArg('author_name', 'Jim');
 
 ```
