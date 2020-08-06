@@ -1,6 +1,6 @@
 {
   "name": "twork/query",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A WP_Query wrapper.",
   "keywords": ["PHP", "WP", "WordPress", "WP_Query", "Query"],
   "license": "MIT",
