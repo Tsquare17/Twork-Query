@@ -4,4 +4,7 @@
     <file>./</file>
     <arg name="extensions" value="php"/>
     <exclude-pattern>vendor/*</exclude-pattern>
+    <rule ref="PSR1.Methods.CamelCapsMethodName.NotCamelCaps">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
 </ruleset>

@@ -233,6 +233,20 @@ class Query
     }
 
     /**
+     * Set the order.
+     *
+     * @param $order
+     *
+     * @return $this
+     */
+    public function order($order): Query
+    {
+        $this->addArg('order', $order);
+
+        return $this;
+    }
+
+    /**
      * Get the number of posts.
      *
      * @return int
