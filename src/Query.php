@@ -82,9 +82,9 @@ class Query
      */
     public function addArg($key, $value, $parent = null): Query
     {
-        if ($value && !$parent) {
+        if (!$parent) {
             $this->args[$key] = $value;
-        } elseif ($value && $parent) {
+        } else {
             $this->args[$parent][$key] = $value;
         }
 
@@ -242,6 +242,52 @@ class Query
     public function order($order): Query
     {
         $this->addArg('order', $order);
+
+        return $this;
+    }
+
+    /**
+     * Set the parameter by which to order posts.
+     *
+     * @param $param
+     *
+     * @return $this
+     */
+    public function orderBy($param): Query
+    {
+        $this->addArg('orderby', $param);
+
+        if (!isset($this->args['order'])) {
+            $this->addArg('order', 'DESC');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Query posts by status.
+     *
+     * @param $status
+     *
+     * @return $this
+     */
+    public function status($status): Query
+    {
+        $this->addArg('post_status', $status);
+
+        return $this;
+    }
+
+    /**
+     * Query posts by year.
+     *
+     * @param $year
+     *
+     * @return $this
+     */
+    public function year($year): Query
+    {
+        $this->addArg('year', $year, 'date_query');
 
         return $this;
     }
