@@ -22,9 +22,9 @@ class QueryTest extends WP_UnitTestCase
     /** @test */
     public function query_returns_results(): void
     {
-        $this->factory->post->create_many(3, ['post_type' => 'custom-post']);
+        $this->factory->post->create_many(3);
 
-        $query = new Query('custom-post');
+        $query = new Query();
 
         $this->assertSame(3, $query->count());
     }
@@ -37,15 +37,13 @@ class QueryTest extends WP_UnitTestCase
 
         $this->factory->post->create_many(2, [
             'post_author' => $user,
-            'post_type'   => 'custom-post',
         ]);
 
         $this->factory->post->create_many(4, [
             'post_author' => $otherUser,
-            'post_type'   => 'custom-post',
         ]);
 
-        $query = new Query('custom-post');
+        $query = new Query();
         $query->author($user);
 
         foreach ($query->fetch() as $null) {
@@ -61,15 +59,13 @@ class QueryTest extends WP_UnitTestCase
 
         $this->factory->post->create_many(2, [
             'post_category' => [$cat],
-            'post_type'     => 'custom-post',
         ]);
 
-        $this->factory->post->create_many(4, [
+        $posts2 = $this->factory->post->create_many(4, [
             'post_category' => [$otherCat],
-            'post_type'     => 'custom-post',
         ]);
 
-        $query = new Query('custom-post');
+        $query = new Query();
         $query->category($cat);
 
         foreach ($query->fetch() as $null) {
@@ -93,15 +89,13 @@ class QueryTest extends WP_UnitTestCase
 
         $this->factory->post->create([
              'post_content' => $searchTerm,
-             'post_type'    => 'custom-post',
          ]);
 
         $this->factory->post->create_many(4, [
             'post_content' => $otherSearchTerm,
-            'post_type'    => 'custom-post',
         ]);
 
-        $query = new Query('custom-post');
+        $query = new Query();
         $query->search($searchTerm);
 
         $this->assertSame(1, $query->count());
@@ -116,11 +110,9 @@ class QueryTest extends WP_UnitTestCase
     /** @test */
     public function can_set_posts_per_page(): void
     {
-        $this->factory->post->create_many(9, [
-            'post_type' => 'custom-post',
-        ]);
+        $this->factory->post->create_many(9);
 
-        $query = new Query('custom-post');
+        $query = new Query();
 
         $originalNumberOfPages = $query->pages();
 
