@@ -140,27 +140,29 @@ class QueryTest extends WP_UnitTestCase
         ]);
 
         $query = new Query();
-        $query->year('2020')
-              ->execute();
+        $query->year('2020');
 
         $this->assertSame(5, $query->count());
 
         $query->reset()
-            ->month('08')
-            ->execute();
+            ->month('08');
 
         $this->assertSame(2, $query->count());
 
         $query->reset()
-            ->month('06')
-            ->execute();
+            ->month('06');
 
         $this->assertSame(7, $query->count());
 
         $query->reset()
-            ->day('10')
-            ->execute();
+            ->day('10');
 
         $this->assertSame(4, $query->count());
+
+        $query->reset()
+            ->month('06')
+            ->year('2020');
+
+        $this->assertSame(3, $query->count());
     }
 }
