@@ -55,7 +55,7 @@ class Query
      *
      * @param int $postsPerPage
      *
-     * @return $this
+     * @return Query
      */
     public function postsPerPage($postsPerPage): Query
     {
@@ -64,6 +64,13 @@ class Query
         return $this;
     }
 
+    /**
+     * Set query paged.
+     *
+     * @param string $queryVar
+     *
+     * @return Query
+     */
     public function paged(string $queryVar): Query
     {
         $this->addArg('paged', get_query_var($queryVar) ? absint(get_query_var($queryVar)) : 1);
@@ -94,13 +101,13 @@ class Query
     /**
      * Execute the query.
      *
-     * @return Query
+     * @return WP_Query
      */
-    public function execute(): Query
+    public function execute(): WP_Query
     {
         $this->query = $this->query ?: new WP_Query($this->args);
 
-        return $this;
+        return $this->query;
     }
 
     /**
@@ -237,7 +244,7 @@ class Query
      *
      * @param $order
      *
-     * @return $this
+     * @return Query
      */
     public function order($order): Query
     {
@@ -251,7 +258,7 @@ class Query
      *
      * @param $param
      *
-     * @return $this
+     * @return Query
      */
     public function orderBy($param): Query
     {
@@ -269,7 +276,7 @@ class Query
      *
      * @param $status
      *
-     * @return $this
+     * @return Query
      */
     public function status($status): Query
     {
@@ -283,11 +290,39 @@ class Query
      *
      * @param $year
      *
-     * @return $this
+     * @return Query
      */
     public function year($year): Query
     {
         $this->addArg('year', $year, 'date_query');
+
+        return $this;
+    }
+
+    /**
+     * Query posts by month.
+     *
+     * @param $month
+     *
+     * @return Query
+     */
+    public function month($month): Query
+    {
+        $this->addArg('month', $month, 'date_query');
+
+        return $this;
+    }
+
+    /**
+     * Query posts by day.
+     *
+     * @param $day
+     *
+     * @return Query
+     */
+    public function day($day): Query
+    {
+        $this->addArg('day', $day, 'date_query');
 
         return $this;
     }

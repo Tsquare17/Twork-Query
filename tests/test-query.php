@@ -14,11 +14,6 @@ use Twork\Query\Query;
  */
 class QueryTest extends WP_UnitTestCase
 {
-    public function setUp(): void
-    {
-        parent::setUp();
-    }
-
     /** @test */
     public function query_returns_results(): void
     {
@@ -49,6 +44,13 @@ class QueryTest extends WP_UnitTestCase
         foreach ($query->fetch() as $null) {
             $this->assertSame($user, get_the_author_meta('ID'));
         }
+
+        $query->reset()
+              ->author($otherUser);
+
+        foreach ($query->fetch() as $null) {
+            $this->assertSame($otherUser, get_the_author_meta('ID'));
+        }
     }
 
     /** @test */
@@ -61,7 +63,7 @@ class QueryTest extends WP_UnitTestCase
             'post_category' => [$cat],
         ]);
 
-        $posts2 = $this->factory->post->create_many(4, [
+        $this->factory->post->create_many(4, [
             'post_category' => [$otherCat],
         ]);
 
@@ -72,9 +74,8 @@ class QueryTest extends WP_UnitTestCase
             $this->assertSame($cat, get_the_category()[0]->term_taxonomy_id);
         }
 
-        $query->reset();
-
-        $query->category($otherCat);
+        $query->reset()
+            ->category($otherCat);
 
         foreach ($query->fetch() as $null) {
             $this->assertSame($otherCat, get_the_category()[0]->term_taxonomy_id);
@@ -100,9 +101,8 @@ class QueryTest extends WP_UnitTestCase
 
         $this->assertSame(1, $query->count());
 
-        $query->reset();
-
-        $query->search($otherSearchTerm);
+        $query->reset()
+              ->search($otherSearchTerm);
 
         $this->assertSame(4, $query->count());
     }
@@ -118,9 +118,49 @@ class QueryTest extends WP_UnitTestCase
 
         $this->assertEquals(1, $originalNumberOfPages);
 
-        $query->reset();
-        $query->addArg('posts_per_page', 3);
+        $query->reset()
+            ->postsPerPage(3);
 
-        $this->assertNotSame($originalNumberOfPages, $query->pages());
+        $this->assertEquals(3, $query->pages());
+    }
+
+    /** @test */
+    public function can_query_by_date(): void
+    {
+        $this->factory->post->create_many(2, [
+            'post_date' => '2020-08-12 18:10:08',
+        ]);
+
+        $this->factory->post->create_many(3, [
+            'post_date' => '2020-06-12 18:10:08',
+        ]);
+
+        $this->factory->post->create_many(4, [
+            'post_date' => '2019-06-10 18:10:08'
+        ]);
+
+        $query = new Query();
+        $query->year('2020')
+              ->execute();
+
+        $this->assertSame(5, $query->count());
+
+        $query->reset()
+            ->month('08')
+            ->execute();
+
+        $this->assertSame(2, $query->count());
+
+        $query->reset()
+            ->month('06')
+            ->execute();
+
+        $this->assertSame(7, $query->count());
+
+        $query->reset()
+            ->day('10')
+            ->execute();
+
+        $this->assertSame(4, $query->count());
     }
 }
