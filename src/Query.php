@@ -32,6 +32,11 @@ class Query
     protected $postType;
 
     /**
+     * @var int Number of times to loop through posts.
+     */
+    protected $loop = 1;
+
+    /**
      * Query constructor.
      *
      * @param string     $type
@@ -113,19 +118,24 @@ class Query
     /**
      * Fetch posts.
      *
+     * @param string|null $object
+     * @param mixed       ...$args
+     *
      * @return Generator|null
      */
-    public function fetch(): ?Generator
+    public function fetch(string $object = null, ...$args): ?Generator
     {
         $this->query = $this->query ?: new WP_Query($this->args);
 
         if ($this->query->have_posts()) {
-            while ($this->query->have_posts()) {
-                $this->query->the_post();
-                yield;
-            }
+            for ($i = 0; $i < $this->loop; $i++) {
+                while ($this->query->have_posts()) {
+                    $this->query->the_post();
+                    yield $object ? new $object($args) : null;
+                }
 
-            wp_reset_postdata();
+                wp_reset_postdata();
+            }
         }
     }
 
@@ -349,5 +359,33 @@ class Query
         $this->query = $this->query ?: new WP_Query($this->args);
 
         return $this->query->max_num_pages;
+    }
+
+    /**
+     * Get the first result.
+     *
+     * @return mixed
+     */
+    public function first()
+    {
+        $this->query = $this->query ?: new WP_Query($this->args);
+
+        $this->query->the_post();
+
+        return $this->query->post;
+    }
+
+    /**
+     * Exclude posts by an array of ids.
+     *
+     * @param $postIds
+     *
+     * @return Query
+     */
+    public function excluding(array $postIds): Query
+    {
+        $this->addArg('post__not_in', $postIds);
+
+        return $this;
     }
 }
