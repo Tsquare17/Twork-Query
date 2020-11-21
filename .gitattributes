@@ -1,0 +1,6 @@
+bin/ export-ignore
+tests/ export-ignore
+.editorconfig export-ignore
+phpcs.xml export-ignore
+phpunit.xml.dist export-ignore
+.travis.yml export-ignore
