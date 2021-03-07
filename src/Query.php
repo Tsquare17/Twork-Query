@@ -110,7 +110,7 @@ class Query
      */
     public function execute(): WP_Query
     {
-        $this->query = $this->query ?: new WP_Query($this->args);
+        $this->setQuery();
 
         return $this->query;
     }
@@ -125,7 +125,7 @@ class Query
      */
     public function fetch(string $object = null, ...$args): ?Generator
     {
-        $this->query = $this->query ?: new WP_Query($this->args);
+        $this->setQuery();
 
         if ($this->query->have_posts()) {
             for ($i = 0; $i < $this->loop; $i++) {
@@ -344,7 +344,7 @@ class Query
      */
     public function count(): int
     {
-        $this->query = $this->query ?: new WP_Query($this->args);
+        $this->setQuery();
 
         return $this->query->found_posts;
     }
@@ -356,7 +356,7 @@ class Query
      */
     public function pages(): int
     {
-        $this->query = $this->query ?: new WP_Query($this->args);
+        $this->setQuery();
 
         return $this->query->max_num_pages;
     }
@@ -368,7 +368,7 @@ class Query
      */
     public function first()
     {
-        $this->query = $this->query ?: new WP_Query($this->args);
+        $this->setQuery();
 
         $this->query->the_post();
 
@@ -387,5 +387,10 @@ class Query
         $this->addArg('post__not_in', $postIds);
 
         return $this;
+    }
+
+    public function setQuery(): void
+    {
+        $this->query = $this->query ?: new WP_Query($this->args);
     }
 }
