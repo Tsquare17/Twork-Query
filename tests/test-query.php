@@ -14,27 +14,36 @@ use Twork\Query\Query;
  */
 class QueryTest extends WP_UnitTestCase
 {
+    public function setUp()
+    {
+        parent::setUp();
+
+        $editor = self::factory()->user->create(['role' => 'editor']);
+
+        wp_set_current_user($editor);
+    }
+
     /** @test */
     public function query_returns_results(): void
     {
-        $this->factory->post->create_many(3);
+        self::factory()->post->create_many(3);
 
         $query = new Query();
 
-        $this->assertSame(3, $query->count());
+        self::assertSame(3, $query->count());
     }
 
     /** @test */
     public function can_query_authors_posts(): void
     {
-        $user = $this->factory->user->create();
-        $otherUser = $this->factory->user->create();
+        $user = self::factory()->user->create();
+        $otherUser = self::factory()->user->create();
 
-        $this->factory->post->create_many(2, [
+        self::factory()->post->create_many(2, [
             'post_author' => $user,
         ]);
 
-        $this->factory->post->create_many(4, [
+        self::factory()->post->create_many(4, [
             'post_author' => $otherUser,
         ]);
 
@@ -42,28 +51,28 @@ class QueryTest extends WP_UnitTestCase
         $query->author($user);
 
         foreach ($query->fetch() as $null) {
-            $this->assertSame($user, get_the_author_meta('ID'));
+            self::assertSame($user, get_the_author_meta('ID'));
         }
 
         $query->reset()
               ->author($otherUser);
 
         foreach ($query->fetch() as $null) {
-            $this->assertSame($otherUser, get_the_author_meta('ID'));
+            self::assertSame($otherUser, get_the_author_meta('ID'));
         }
     }
 
     /** @test */
     public function can_query_by_category(): void
     {
-        $cat = $this->factory->category->create();
-        $otherCat = $this->factory->category->create();
+        $cat = self::factory()->category->create();
+        $otherCat = self::factory()->category->create();
 
-        $this->factory->post->create_many(2, [
+        self::factory()->post->create_many(2, [
             'post_category' => [$cat],
         ]);
 
-        $this->factory->post->create_many(4, [
+        self::factory()->post->create_many(4, [
             'post_category' => [$otherCat],
         ]);
 
@@ -71,14 +80,14 @@ class QueryTest extends WP_UnitTestCase
         $query->category($cat);
 
         foreach ($query->fetch() as $null) {
-            $this->assertSame($cat, get_the_category()[0]->term_taxonomy_id);
+            self::assertSame($cat, get_the_category()[0]->term_taxonomy_id);
         }
 
         $query->reset()
             ->category($otherCat);
 
         foreach ($query->fetch() as $null) {
-            $this->assertSame($otherCat, get_the_category()[0]->term_taxonomy_id);
+            self::assertSame($otherCat, get_the_category()[0]->term_taxonomy_id);
         }
     }
 
@@ -88,81 +97,175 @@ class QueryTest extends WP_UnitTestCase
         $searchTerm = '12test20342';
         $otherSearchTerm = '415948082';
 
-        $this->factory->post->create([
+        self::factory()->post->create([
              'post_content' => $searchTerm,
          ]);
 
-        $this->factory->post->create_many(4, [
+        self::factory()->post->create_many(4, [
             'post_content' => $otherSearchTerm,
         ]);
 
         $query = new Query();
         $query->search($searchTerm);
 
-        $this->assertSame(1, $query->count());
+        self::assertSame(1, $query->count());
 
         $query->reset()
               ->search($otherSearchTerm);
 
-        $this->assertSame(4, $query->count());
+        self::assertSame(4, $query->count());
     }
 
     /** @test */
     public function can_set_posts_per_page(): void
     {
-        $this->factory->post->create_many(9);
+        self::factory()->post->create_many(9);
 
         $query = new Query();
 
         $originalNumberOfPages = $query->pages();
 
-        $this->assertEquals(1, $originalNumberOfPages);
+        self::assertEquals(1, $originalNumberOfPages);
 
         $query->reset()
             ->postsPerPage(3);
 
-        $this->assertEquals(3, $query->pages());
+        self::assertEquals(3, $query->pages());
     }
 
     /** @test */
     public function can_query_by_date(): void
     {
-        $this->factory->post->create_many(2, [
+        self::factory()->post->create_many(2, [
             'post_date' => '2020-08-12 18:10:08',
         ]);
 
-        $this->factory->post->create_many(3, [
+        self::factory()->post->create_many(3, [
             'post_date' => '2020-06-12 18:10:08',
         ]);
 
-        $this->factory->post->create_many(4, [
+        self::factory()->post->create_many(4, [
             'post_date' => '2019-06-10 18:10:08'
         ]);
 
         $query = new Query();
         $query->year('2020');
 
-        $this->assertSame(5, $query->count());
+        self::assertSame(5, $query->count());
 
         $query->reset()
             ->month('08');
 
-        $this->assertSame(2, $query->count());
+        self::assertSame(2, $query->count());
 
         $query->reset()
             ->month('06');
 
-        $this->assertSame(7, $query->count());
+        self::assertSame(7, $query->count());
 
         $query->reset()
             ->day('10');
 
-        $this->assertSame(4, $query->count());
+        self::assertSame(4, $query->count());
 
         $query->reset()
             ->month('06')
             ->year('2020');
 
-        $this->assertSame(3, $query->count());
+        self::assertSame(3, $query->count());
+    }
+
+    /** @test */
+    public function can_exclude_posts(): void
+    {
+        $expectedPostIds = self::factory()->post->create_many(3);
+
+        $excludedPostIds = self::factory()->post->create_many(5);
+
+        $query = new Query();
+
+        $query->excluding($excludedPostIds);
+
+        self::assertSame(count($expectedPostIds), $query->count());
+    }
+
+    /** @test */
+    public function can_query_by_postmeta(): void
+    {
+        $id = self::factory()->post->create([
+            'meta_input' => [
+                'key1' => 'value1',
+            ],
+        ]);
+
+        self::factory()->post->create_many(5, [
+            'meta_input' => [
+                'key2' => 'value2',
+            ]
+        ]);
+
+        $query = new Query();
+
+        $query->metaQuery(
+            $query->createMetaQuery()
+            ->key('key1')
+            ->value('value1')
+        );
+
+        $queriedPostId = null;
+        if ($post = $query->first()) {
+            $queriedPostId = $post->ID;
+        }
+
+        self::assertSame($id, $queriedPostId);
+        self::assertSame(1, $query->count());
+    }
+
+    /** @test */
+    public function can_query_by_taxonomy(): void
+    {
+        register_taxonomy('test_taxonomy', 'post');
+        register_taxonomy('other_tax', 'post');
+
+        $term1 = self::factory()->term->create([
+            'taxonomy' => 'test_taxonomy',
+            'name' => 'term1',
+        ]);
+
+        $term2 = self::factory()->term->create([
+            'taxonomy' => 'other_tax',
+            'name' => 'term2',
+        ]);
+
+        $id = self::factory()->post->create([
+            'tax_input' => [
+                'test_taxonomy' => $term1
+            ],
+        ]);
+
+        self::factory()->post->create_many(5, [
+            'tax_input' => [
+                'other_tax' => [
+                    $term2,
+                ]
+            ],
+        ]);
+
+        $query = new Query();
+
+        $query->taxQuery(
+            $query->createTaxQuery()
+            ->taxonomy('test_taxonomy')
+            ->field('slug')
+            ->terms([$term1])
+        );
+
+        $queriedPostId = null;
+        if ($post = $query->first()) {
+            $queriedPostId = $post->ID;
+        }
+
+        self::assertSame($id, $queriedPostId);
+        self::assertSame(1, $query->count());
     }
 }

@@ -37,6 +37,16 @@ class Query
     protected $loop = 1;
 
     /**
+     * @var MetaQuery[] A set of meta queries.
+     */
+    protected $metaQueries = [];
+
+    /**
+     * @var TaxQuery[] A set of taxonomy queries.
+     */
+    protected $taxQueries = [];
+
+    /**
      * Query constructor.
      *
      * @param string     $type
@@ -206,6 +216,12 @@ class Query
      */
     public function search($search): Query
     {
+        if (isset($this->args['s'])) {
+            $this->args['s'] .= "+{$search}";
+
+            return $this;
+        }
+
         $this->addArg('s', $search);
 
         return $this;
@@ -214,19 +230,43 @@ class Query
     /**
      * Add a meta query.
      *
-     * @param string|array $args
-     *
+     * @param MetaQuery $metaQuery
      * @return Query
      */
-    public function metaQuery($args): Query
+    public function metaQuery(MetaQuery $metaQuery): Query
     {
-        if (is_array($args)) {
-            $this->args['meta_query'][] = $args;
-        } else {
-            $this->args['meta_query'] = $args;
-        }
+        $this->metaQueries[] = $metaQuery;
 
         return $this;
+    }
+
+    /**
+     * @return MetaQuery
+     */
+    public function createMetaQuery(): MetaQuery
+    {
+        return new MetaQuery();
+    }
+
+    /**
+     * Add a taxonomy query.
+     *
+     * @param TaxQuery $taxQuery
+     * @return Query
+     */
+    public function taxQuery(TaxQuery $taxQuery): Query
+    {
+        $this->taxQueries[] = $taxQuery;
+
+        return $this;
+    }
+
+    /**
+     * @return TaxQuery
+     */
+    public function createTaxQuery(): TaxQuery
+    {
+        return new TaxQuery();
     }
 
     /**
@@ -338,7 +378,7 @@ class Query
     }
 
     /**
-     * Get the number of posts.
+     * Get the total number of posts.
      *
      * @return int
      */
@@ -350,7 +390,7 @@ class Query
     }
 
     /**
-     * Get the number of pages of posts.
+     * Get the number of pages of posts (found posts / posts per page).
      *
      * @return int
      */
@@ -370,9 +410,13 @@ class Query
     {
         $this->setQuery();
 
-        $this->query->the_post();
+        if ($this->query->have_posts()) {
+            $this->query->the_post();
 
-        return $this->query->post;
+            return $this->query->post;
+        }
+
+        return null;
     }
 
     /**
@@ -389,8 +433,59 @@ class Query
         return $this;
     }
 
-    public function setQuery(): void
+    /**
+     * Set the query property.
+     */
+    protected function setQuery(): void
     {
+        if (!isset($this->args['meta_query'])) {
+            $this->buildMetaQueries();
+        }
+
+        if (!isset($this->args['tax_query'])) {
+            $this->buildTaxQueries();
+        }
+
         $this->query = $this->query ?: new WP_Query($this->args);
+    }
+
+    /**
+     * Add meta queries to args.
+     * TODO: This will need to change to accommodate nesting queries.
+     */
+    protected function buildMetaQueries(): void
+    {
+        foreach ($this->metaQueries as $query) {
+            if ($query === $this->metaQueries[0]) {
+                $this->args['meta_query']['relation'] = $query->getRelation();
+            }
+
+            $this->args['meta_query'][] = [
+                'key' => $query->getKey(),
+                'value' => $query->getValue(),
+                'compare' => $query->getCompare(),
+                'type' => $query->getType(),
+            ];
+        }
+    }
+
+    /**
+     * Add taxonomy queries to args.
+     * TODO: This will need to change to accommodate nesting queries.
+     */
+    protected function buildTaxQueries(): void
+    {
+        foreach ($this->taxQueries as $query) {
+            if ($query === $this->taxQueries[0]) {
+                $this->args['relation'] = $query->getRelation();
+            }
+
+            $this->args['tax_query'][] = [
+                'taxonomy' => $query->getTaxonomy(),
+                'field' => $query->getField(),
+                'terms' => $query->getTerms(),
+                'include_children' => $query->isIncludingChildren(),
+            ];
+        }
     }
 }
