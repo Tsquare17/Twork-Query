@@ -379,7 +379,7 @@ class Query implements Iterator
     }
 
     /**
-     * Query posts by slug.
+     * Query posts by slugs.
      *
      * @param $slug
      * @param bool $in
@@ -387,9 +387,47 @@ class Query implements Iterator
      */
     public function slug($slug, $in = true): Query
     {
-        $this->addArg('post_name__' . (!$in ? 'not_' : '') . 'in', is_array($slug) ? $slug : [$slug]);
+        $this->addArg('post_name__' . $this->inOrNot($in), is_array($slug) ? $slug : [$slug]);
 
         return $this;
+    }
+
+    /**
+     * Query posts by ids.
+     *
+     * @param $id
+     * @param bool $in
+     * @return $this
+     */
+    public function id($id, $in = true): Query
+    {
+        $this->addArg('post__' . $this->inOrNot($in), is_array($id) ? $id : [$id]);
+
+        return $this;
+    }
+
+    /**
+     * Set the column to return.
+     *
+     * @param $field
+     * @return $this
+     */
+    public function field($field): Query
+    {
+        $this->addArg('field', $field);
+
+        return $this;
+    }
+
+    /**
+     * Compose the appropriate include/exclude string.
+     *
+     * @param $in
+     * @return string
+     */
+    protected function inOrNot($in): string
+    {
+        return (!$in ? 'not_' : '') . 'in';
     }
 
     /**

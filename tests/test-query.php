@@ -270,7 +270,7 @@ class QueryTest extends WP_UnitTestCase
     }
 
     /** @test */
-    public function can_query_by_post_slug(): void
+    public function can_query_by_post_slugs(): void
     {
         self::factory()->post->create([
             'post_name' => 'foo',
@@ -294,6 +294,43 @@ class QueryTest extends WP_UnitTestCase
             ->slug(['foo', 'bar']);
 
         self::assertSame(2, $query->count());
+    }
+
+    /** @test */
+    public function can_query_posts_in_ids(): void
+    {
+        $includedId = self::factory()->post->create([
+            'post_name' => 'foo',
+        ]);
+
+        self::factory()->post->create_many(3);
+
+        $query = new Query();
+
+        $query->id($includedId);
+
+        self::assertSame(1, $query->count());
+
+        self::assertSame($includedId, $query->first()->ID);
+    }
+
+    /** @test */
+    public function can_exclude_posts_in_ids(): void
+    {
+        $excludedId = self::factory()->post->create([
+            'post_name' => 'bar',
+        ]);
+
+        self::factory()->post->create_many(3);
+
+        $query = new Query();
+
+        $query->id($excludedId, false)
+            ->field('id');
+
+        self::assertSame(3, $query->count());
+
+        self::assertNotContains($excludedId, $query);
     }
 
     /** @test */
