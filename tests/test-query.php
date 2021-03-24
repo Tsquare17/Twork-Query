@@ -295,4 +295,20 @@ class QueryTest extends WP_UnitTestCase
 
         self::assertSame(2, $query->count());
     }
+
+    /** @test */
+    public function can_iterate_over_query_object(): void
+    {
+        self::assertIsIterable(new Query());
+
+        self::factory()->post->create_many(2, [
+            'post_title' => 'foo',
+        ]);
+
+        $posts = new Query();
+
+        foreach ($posts as $post) {
+            self::assertSame('foo', get_the_title());
+        }
+    }
 }

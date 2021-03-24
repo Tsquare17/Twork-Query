@@ -3,13 +3,14 @@
 namespace Twork\Query;
 
 use Generator;
+use Iterator;
 use WP_Query;
 
 /**
  * Class Query
  * @package Twork\Query
  */
-class Query
+class Query implements Iterator
 {
     /**
      * @var WP_Query
@@ -501,5 +502,65 @@ class Query
                 'include_children' => $query->isIncludingChildren(),
             ];
         }
+    }
+
+    /**
+     * Return the current element
+     *
+     * @return int
+     */
+    public function current(): int
+    {
+        $this->setQuery();
+
+        $this->query->the_post();
+
+        return $this->query->current_post;
+    }
+
+    /**
+     * Move forward to next element
+     */
+    public function next(): void
+    {
+        // Unneeded.
+    }
+
+    /**
+     * Return the key of the current element
+     *
+     * @return int
+     */
+    public function key(): int
+    {
+        $this->setQuery();
+
+        return $this->query->current_post;
+    }
+
+    /**
+     * Checks if current position is valid
+     *
+     * @return bool|null
+     */
+    public function valid(): ?bool
+    {
+        $this->setQuery();
+
+        if ($this->query->have_posts()) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Rewind the Iterator to the first element
+     */
+    public function rewind(): void
+    {
+        $this->setQuery();
+
+        $this->query->rewind_posts();
     }
 }
