@@ -268,4 +268,31 @@ class QueryTest extends WP_UnitTestCase
         self::assertSame($id, $queriedPostId);
         self::assertSame(1, $query->count());
     }
+
+    /** @test */
+    public function can_query_by_post_slug(): void
+    {
+        self::factory()->post->create([
+            'post_name' => 'foo',
+        ]);
+
+        self::factory()->post->create([
+            'post_name' => 'bar',
+        ]);
+
+        self::factory()->post->create_many(3);
+
+        $query = new Query();
+
+        $query->slug('foo');
+
+        self::assertSame(1, $query->count());
+
+        self::assertSame('foo', $query->first()->post_name);
+
+        $query->reset()
+            ->slug(['foo', 'bar']);
+
+        self::assertSame(2, $query->count());
+    }
 }

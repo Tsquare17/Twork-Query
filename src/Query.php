@@ -378,6 +378,20 @@ class Query
     }
 
     /**
+     * Query posts by slug.
+     *
+     * @param $slug
+     * @param bool $in
+     * @return Query
+     */
+    public function slug($slug, $in = true): Query
+    {
+        $this->addArg('post_name__' . (!$in ? 'not_' : '') . 'in', is_array($slug) ? $slug : [$slug]);
+
+        return $this;
+    }
+
+    /**
      * Get the total number of posts.
      *
      * @return int
