@@ -314,6 +314,71 @@ class QueryTest extends WP_UnitTestCase
     }
 
     /** @test */
+    public function can_build_nested_tax_query(): void
+    {
+        register_taxonomy('test_taxonomy', 'post');
+        register_taxonomy('other_tax', 'post');
+        register_taxonomy('nogo_tax', 'post');
+
+        $term1 = self::factory()->term->create([
+            'taxonomy' => 'test_taxonomy',
+            'name' => 'term1',
+        ]);
+
+        $term2 = self::factory()->term->create([
+            'taxonomy' => 'other_tax',
+            'name' => 'term2',
+        ]);
+
+        $term3 = self::factory()->term->create([
+            'taxonomy' => 'nogo_tax',
+            'name' => 'term3',
+        ]);
+
+        $id1 = self::factory()->post->create([
+            'tax_input' => [
+                'test_taxonomy' => $term1
+            ],
+        ]);
+
+        $id2 = self::factory()->post->create([
+            'tax_input' => [
+                'other_tax' => $term2
+            ],
+        ]);
+
+        $id3 = self::factory()->post->create([
+            'tax_input' => [
+                'nogo_tax' => $term3
+            ],
+        ]);
+
+        $query = new Query();
+        $query->field('id');
+
+        $query->taxQuery(
+            [
+                $query->createTaxQuery()
+                    ->taxonomy('test_taxonomy')
+                    ->field('slug')
+                    ->terms([$term1])
+                    ->relation('OR'),
+                [
+                    $query->createTaxQuery()
+                        ->taxonomy('other_tax')
+                        ->field('slug')
+                        ->terms([$term2])
+                        ->relation('OR'),
+                ]
+            ]
+        );
+
+         self::assertContains($id1, $query);
+         self::assertContains($id2, $query);
+         self::assertSame(2, $query->count());
+    }
+
+    /** @test */
     public function can_query_by_post_slugs(): void
     {
         self::factory()->post->create([

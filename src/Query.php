@@ -231,7 +231,7 @@ class Query implements Iterator
     /**
      * Add a meta query.
      *
-     * @param MetaQuery|array $metaQuery
+     * @param MetaQuery|MetaQuery[] $metaQuery
      * @return Query
      */
     public function metaQuery($metaQuery): Query
@@ -252,10 +252,10 @@ class Query implements Iterator
     /**
      * Add a taxonomy query.
      *
-     * @param TaxQuery $taxQuery
+     * @param TaxQuery|TaxQuery[] $taxQuery
      * @return Query
      */
-    public function taxQuery(TaxQuery $taxQuery): Query
+    public function taxQuery($taxQuery): Query
     {
         $this->taxQueries[] = $taxQuery;
 
@@ -492,11 +492,11 @@ class Query implements Iterator
     protected function setQuery(): void
     {
         if (!isset($this->args['meta_query'])) {
-            $this->args['meta_query'][] = $this->buildMetaQueries($this->metaQueries);
+            $this->args['meta_query'] = $this->buildMetaQueries($this->metaQueries);
         }
 
         if (!isset($this->args['tax_query'])) {
-            $this->buildTaxQueries();
+            $this->args['tax_query'] = $this->buildTaxQueries($this->taxQueries);
         }
 
         $this->query = $this->query ?: new WP_Query($this->args);
@@ -504,6 +504,9 @@ class Query implements Iterator
 
     /**
      * Add meta queries to args.
+     * @param MetaQuery[] $metaQueries
+     * @param array $return
+     * @return array
      */
     protected function buildMetaQueries(array $metaQueries, $return = []): array
     {
@@ -531,26 +534,37 @@ class Query implements Iterator
 
     /**
      * Add taxonomy queries to args.
-     * TODO: This will need to change to accommodate nesting queries.
+     *
+     * @param TaxQuery[] $taxQueries
+     * @param array $return
+     * @return array
      */
-    protected function buildTaxQueries(): void
+    protected function buildTaxQueries(array $taxQueries, $return = []): array
     {
-        foreach ($this->taxQueries as $query) {
-            if ($query === $this->taxQueries[0]) {
-                $this->args['relation'] = $query->getRelation();
+        foreach ($taxQueries as $query) {
+            if ($query instanceof TaxQuery && $query === $taxQueries[0]) {
+                $return['relation'] = $query->getRelation();
             }
 
-            $this->args['tax_query'][] = [
-                'taxonomy' => $query->getTaxonomy(),
-                'field' => $query->getField(),
-                'terms' => $query->getTerms(),
-                'include_children' => $query->isIncludingChildren(),
-            ];
+            if (!is_array($query)) {
+                $return[] = [
+                    'taxonomy' => $query->getTaxonomy(),
+                    'field' => $query->getField(),
+                    'terms' => $query->getTerms(),
+                    'include_children' => $query->isIncludingChildren(),
+                ];
+
+                continue;
+            }
+
+            $return[] = $this->buildTaxQueries($query, $return);
         }
+
+        return $return;
     }
 
     /**
-     * Return the current element
+     * Setup the next post and return the current post id.
      *
      * @return int
      */
@@ -560,11 +574,12 @@ class Query implements Iterator
 
         $this->query->the_post();
 
-        return $this->query->current_post;
+        return $this->query->posts[$this->query->current_post]->ID;
     }
 
     /**
      * Move forward to next element
+     * TODO: Consider that this might be used thinking it will proceed to the next item.
      */
     public function next(): void
     {
@@ -595,6 +610,8 @@ class Query implements Iterator
         if ($this->query->have_posts()) {
             return true;
         }
+
+        wp_reset_postdata();
 
         return null;
     }
