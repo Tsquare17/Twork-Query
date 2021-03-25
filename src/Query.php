@@ -231,10 +231,10 @@ class Query implements Iterator
     /**
      * Add a meta query.
      *
-     * @param MetaQuery $metaQuery
+     * @param MetaQuery|array $metaQuery
      * @return Query
      */
-    public function metaQuery(MetaQuery $metaQuery): Query
+    public function metaQuery($metaQuery): Query
     {
         $this->metaQueries[] = $metaQuery;
 
@@ -492,7 +492,7 @@ class Query implements Iterator
     protected function setQuery(): void
     {
         if (!isset($this->args['meta_query'])) {
-            $this->buildMetaQueries();
+            $this->args['meta_query'][] = $this->buildMetaQueries($this->metaQueries);
         }
 
         if (!isset($this->args['tax_query'])) {
@@ -504,22 +504,29 @@ class Query implements Iterator
 
     /**
      * Add meta queries to args.
-     * TODO: This will need to change to accommodate nesting queries.
      */
-    protected function buildMetaQueries(): void
+    protected function buildMetaQueries(array $metaQueries, $return = []): array
     {
-        foreach ($this->metaQueries as $query) {
-            if ($query === $this->metaQueries[0]) {
-                $this->args['meta_query']['relation'] = $query->getRelation();
+        foreach ($metaQueries as $query) {
+            if ($query === $metaQueries[0] && $query instanceof MetaQuery) {
+                $return['relation'] = $query->getRelation();
             }
 
-            $this->args['meta_query'][] = [
-                'key' => $query->getKey(),
-                'value' => $query->getValue(),
-                'compare' => $query->getCompare(),
-                'type' => $query->getType(),
-            ];
+            if (!is_array($query)) {
+                $return[] = [
+                    'key' => $query->getKey(),
+                    'value' => $query->getValue(),
+                    'compare' => $query->getCompare(),
+                    'type' => $query->getType(),
+                ];
+
+                continue;
+            }
+
+            $return[] = $this->buildMetaQueries($query, $return);
         }
+
+        return $return;
     }
 
     /**

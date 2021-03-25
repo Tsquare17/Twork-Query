@@ -222,6 +222,50 @@ class QueryTest extends WP_UnitTestCase
     }
 
     /** @test */
+    public function can_build_nested_meta_query(): void
+    {
+        $id = self::factory()->post->create([
+            'meta_input' => [
+                'key1' => 'value1',
+                'key2' => 'value2',
+            ],
+        ]);
+
+        self::factory()->post->create_many(5, [
+            'meta_input' => [
+                'key1' => 'value1',
+            ]
+        ]);
+
+        self::factory()->post->create_many(5, [
+            'meta_input' => [
+                'key2' => 'value2',
+            ]
+        ]);
+
+        $query = new Query();
+
+        $query->metaQuery(
+            [
+                $query->createMetaQuery()
+                    ->key('key2')
+                    ->value('value2'),
+                $query->createMetaQuery()
+                    ->key('key1')
+                    ->value('value1')
+            ]
+        );
+
+        $queriedPostId = null;
+        if ($post = $query->first()) {
+            $queriedPostId = $post->ID;
+        }
+
+        self::assertSame($id, $queriedPostId);
+        self::assertSame(1, $query->count());
+    }
+
+    /** @test */
     public function can_query_by_taxonomy(): void
     {
         register_taxonomy('test_taxonomy', 'post');
