@@ -87,7 +87,7 @@ class Query implements Iterator
      *
      * @return Query
      */
-    public function paged(string $queryVar): Query
+    public function paged(string $queryVar = 'paged'): Query
     {
         $this->addArg('paged', get_query_var($queryVar) ? absint(get_query_var($queryVar)) : 1);
 
